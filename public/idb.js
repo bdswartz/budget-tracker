@@ -7,8 +7,8 @@ const request = indexedDB.open('budget_tracker', 1);
 request.onupgradeneeded = function(event) {
     // save a reference to the database 
     const db = event.target.result;
-    // create an object store (table) called `new_transaction`, set it to have an auto incrementing primary key of sorts 
-    db.createObjectStore('new_transaction', { autoIncrement: true });
+    // create an object store (table) called `new_budget_entry`, set it to have an auto incrementing primary key of sorts 
+    db.createObjectStore('new_budget_entry', { autoIncrement: true });
   };
 
   // upon a successful 
@@ -18,8 +18,7 @@ request.onsuccess = function(event) {
 
   // check if app is online, if yes run uploadTransaction() function to send all local db data to api
   if (navigator.onLine) {
-    // we haven't created this yet, but we will soon, so let's comment it out for now
-    uploadTransaction();
+    uploadBudgetEntry();
   }
 };
 
@@ -27,34 +26,36 @@ request.onerror = function(event) {
   // log error here
   console.log(event.target.errorCode);
 };
-// TODO:write to the indexed.db instead of the server db if no internet connection
+// write to the indexed.db instead of the server db if no internet connection
 // This function will be executed if we attempt to submit a new transaction and there's no internet connection
 function saveRecord(record) {
     // open a new transaction with the database with read and write permissions 
-    const transaction = db.transaction(['new_pizza'], 'readwrite');
+    const transaction = db.transaction(['new_budget_entry'], 'readwrite');
   
-    // access the object store for `new_pizza`
-    const pizzaObjectStore = transaction.objectStore('new_pizza');
+    // access the object store for `new_budget_entry`
+    const budgetObjectStore = transaction.objectStore('new_budget_entry');
   
     // add record to your store with add method
-    pizzaObjectStore.add(record);
+    budgetObjectStore.add(record);
+    alert('Your transaction has been saved. Please connect to the internet to update master database.');
   }
-// TODO: to run once the connection returns - get info from indexed.db and send to server db
-  function uploadTransaction() {
+// run once the connection returns - get info from indexed.db and send to server db
+  function uploadBudgetEntry() {
+    console.log("there sir")
     // open a transaction on your db
-    const transaction = db.transaction(['new_pizza'], 'readwrite');
+    const transaction = db.transaction(['new_budget_entry'], 'readwrite');
   
     // access your object store
-    const pizzaObjectStore = transaction.objectStore('new_pizza');
+    const budgetObjectStore = transaction.objectStore('new_budget_entry');
   
     // get all records from store and set to a variable
-    const getAll = pizzaObjectStore.getAll();
+    const getAll = budgetObjectStore.getAll();
   
     // upon a successful .getAll() execution, run this function
     getAll.onsuccess = function() {
     // if there was data in indexedDb's store, let's send it to the api server
     if (getAll.result.length > 0) {
-      fetch('/api/pizzas', {
+      fetch('/api/transaction', {
         method: 'POST',
         body: JSON.stringify(getAll.result),
         headers: {
@@ -68,13 +69,13 @@ function saveRecord(record) {
             throw new Error(serverResponse);
           }
           // open one more transaction
-          const transaction = db.transaction(['new_pizza'], 'readwrite');
-          // access the new_pizza object store
-          const pizzaObjectStore = transaction.objectStore('new_pizza');
+          const transaction = db.transaction(['new_budget_entry'], 'readwrite');
+          // access the new_budget_entry object store
+          const budgetObjectStore = transaction.objectStore('new_budget_entry');
           // clear all items in your store
-          pizzaObjectStore.clear();
+          budgetObjectStore.clear();
 
-          alert('All saved pizza has been submitted!');
+          alert('All saved budget entries have been submitted!');
         })
         .catch(err => {
           console.log(err);
@@ -84,4 +85,4 @@ function saveRecord(record) {
 }
 
 // listen for app coming back online
-window.addEventListener('online', uploadPizza);
+window.addEventListener('online', uploadBudgetEntry);
