@@ -41,7 +41,6 @@ function saveRecord(record) {
   }
 // run once the connection returns - get info from indexed.db and send to server db
   function uploadBudgetEntry() {
-    console.log("there sir")
     // open a transaction on your db
     const transaction = db.transaction(['new_budget_entry'], 'readwrite');
   
